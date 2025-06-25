@@ -1,0 +1,25 @@
+﻿Del 5 Efter Scaffold 
+1. Undersök koden som har skapats:
+
+a. Vilka metoder har genererats? 
+Svar:	Vi Genererade ProductsController som har metoderna:
+		GetProduct(), GetProduct(int id), 
+		PutProduct(int id, Product product), PostProduct(Product product), DeleteProduct(int id) samt DeleteProduct(int id).
+		StorageContext genererades även tillsammans med ServiceDependencies.json
+
+
+b. Hur används StorageContext? 
+Svar:	ProductsController tar av StorageContext och sätter en konstruktor med _context = context där _context är ett readonly fält av StorageContext.
+		I Program.cs skapas en databas med StorageContext  med builder.Services.AddDbContext<StorageContext>...
+
+
+c. Hur fungerar CreatedAtAction, Ok, NotFound osv? 
+Svar:	CreatedAtAction tar in parametrar (string actionName, object routeValues, object Value) och skapar ett objekt som ger en statuskod
+		I vårt fall använder vi den på följande vis: return CreatedAtAction("GetProduct", new { id = product.Id }, product);
+		Vi returnerar alltså en statuskod baserat på ifall det gått bra (200-range statuskod).
+
+		NotFound skapar ett objekt NotFoundResult som producerar och returnerar en status kod 404 som respons där vi kan använda den ifall en produkt t.ex ej finns (=null)
+
+		Ok skapar ett OkObjectResult som returnerar en statuskod 200 
+
+		Kort sagt så kollar de data och ger ut statuskod beroende på ifall datat finns, är ok osv.
