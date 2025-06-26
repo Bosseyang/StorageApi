@@ -50,6 +50,25 @@ namespace StorageApi.Controllers
                 Count = product.Count
             };
         }
+        [HttpGet("{stats}")]
+        public async Task<ActionResult<IEnumerable<ProductDto>>> SearchProducts(string? category, string? name)
+        {
+            var query = _context.Product.AsQueryable();
+
+            if (!string.IsNullOrEmpty(category))
+                query = query.Where(p => p.Category == category);
+
+            if (!string.IsNullOrEmpty(name))
+                query = query.Where(p => p.Name.Contains(name));
+
+            return await query.Select(p => new ProductDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Price = p.Price,
+                Count = p.Count
+            }).ToListAsync();
+        }
 
         // PUT: api/Products/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
