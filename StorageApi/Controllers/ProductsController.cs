@@ -50,16 +50,19 @@ namespace StorageApi.Controllers
                 Count = product.Count
             };
         }
-        [HttpGet("{stats}")]
-        public async Task<ActionResult<IEnumerable<ProductDto>>> SearchProducts(string? category, string? name)
+        // GET: api/Products/search
+        [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<ProductDto>>> SearchProducts(
+     [FromQuery] string? category,
+     [FromQuery] string? name)
         {
             var query = _context.Product.AsQueryable();
 
-            if (!string.IsNullOrEmpty(category))
-                query = query.Where(p => p.Category == category);
+            if (!string.IsNullOrWhiteSpace(category))
+                query = query.Where(p => EF.Functions.Like(p.Category, category));
 
-            if (!string.IsNullOrEmpty(name))
-                query = query.Where(p => p.Name.Contains(name));
+            if (!string.IsNullOrWhiteSpace(name))
+                query = query.Where(p => EF.Functions.Like(p.Name, $"%{name}%"));
 
             return await query.Select(p => new ProductDto
             {
