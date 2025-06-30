@@ -17,21 +17,6 @@ namespace StorageApi.Controllers
             _context = context;
         }
 
-        // GET: api/Products
-        //[HttpGet]
-        //public async Task<ActionResult<IEnumerable<ProductDto>>> GetProduct()
-        //{
-        //    //We remap the properties in product to a ProductDto and only return the following properties
-        //    return await _context.Products.Select(p => new ProductDto
-        //    {
-        //        Id = p.Id,
-        //        Name = p.Name,
-        //        Price = p.Price,
-        //        Count = p.Count,
-
-        //    }).ToListAsync();
-        //}
-
         // GET: api/Products/?category=KategoriNamn
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts([FromQuery] string? category)
@@ -50,6 +35,7 @@ namespace StorageApi.Controllers
             //Filters the product with category keyword
             query = query.Where(p => EF.Functions.Like(p.Category, category));
 
+            //We remap the properties in product to a ProductDto and only return the following properties
             var products = await query.Select(p => new ProductDto
             {
                 Id = p.Id,
