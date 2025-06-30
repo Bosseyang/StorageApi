@@ -23,7 +23,7 @@ namespace StorageApi.Controllers
         public async Task<ActionResult<IEnumerable<ProductDto>>> GetProduct()
         {
             //We remap the properties in product to a ProductDto and only return the following properties
-            return await _context.Product.Select(p => new ProductDto
+            return await _context.Products.Select(p => new ProductDto
             {
                 Id = p.Id,
                 Name = p.Name,
@@ -37,7 +37,7 @@ namespace StorageApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ProductDto>> GetProduct(int id)
         {
-            var product = await _context.Product.FindAsync(id);
+            var product = await _context.Products.FindAsync(id);
 
             if (product == null)
                 return NotFound();
@@ -56,7 +56,7 @@ namespace StorageApi.Controllers
      [FromQuery] string? category,
      [FromQuery] string? name)
         {
-            var query = _context.Product.AsQueryable();
+            var query = _context.Products.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(category))
                 query = query.Where(p => EF.Functions.Like(p.Category, category));
@@ -78,7 +78,7 @@ namespace StorageApi.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProduct(int id, CreateProductDto dto)
         {
-            var product = await _context.Product.FindAsync(id);
+            var product = await _context.Products.FindAsync(id);
 
             product!.Name = dto.Name;
             product!.Price = dto.Price;
@@ -121,7 +121,7 @@ namespace StorageApi.Controllers
             Count = dto.Count,
             Description = dto.Description
         };
-            _context.Product.Add(product);
+            _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
             var result = new ProductDto
@@ -139,13 +139,13 @@ namespace StorageApi.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
-            var product = await _context.Product.FindAsync(id);
+            var product = await _context.Products.FindAsync(id);
             if (product == null)
             {
                 return NotFound();
             }
 
-            _context.Product.Remove(product);
+            _context.Products.Remove(product);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -153,7 +153,9 @@ namespace StorageApi.Controllers
 
         private bool ProductExists(int id)
         {
-            return _context.Product.Any(e => e.Id == id);
+            return _context.Products.Any(e => e.Id == id);
         }
+
+        //Experiment with relations and Fluent api?
     }
 }
