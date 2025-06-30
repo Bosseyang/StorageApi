@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using StorageApi.Data;
 using StorageApi.DTOs;
 using StorageApi.Models.Entities;
-using System.ComponentModel.DataAnnotations;
 
 namespace StorageApi.Controllers
 {
@@ -19,18 +18,47 @@ namespace StorageApi.Controllers
         }
 
         // GET: api/Products
+        //[HttpGet]
+        //public async Task<ActionResult<IEnumerable<ProductDto>>> GetProduct()
+        //{
+        //    //We remap the properties in product to a ProductDto and only return the following properties
+        //    return await _context.Products.Select(p => new ProductDto
+        //    {
+        //        Id = p.Id,
+        //        Name = p.Name,
+        //        Price = p.Price,
+        //        Count = p.Count,
+
+        //    }).ToListAsync();
+        //}
+
+        // GET: api/Products/?category=KategoriNamn
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProductDto>>> GetProduct()
+        public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts([FromQuery] string? category)
         {
-            //We remap the properties in product to a ProductDto and only return the following properties
-            return await _context.Products.Select(p => new ProductDto
+            var query = _context.Products.AsQueryable();
+            //If we have category in query, we check for the entered query string and 
+            if (!string.IsNullOrWhiteSpace(category))
+            {
+                //Check if category exists
+                var categoryExists = await _context.Products.AnyAsync(p => p.Category == category);
+
+                if (!categoryExists) 
+                    return NotFound($"Category: {category} not found.");
+            }
+
+            //Filters the product with category keyword
+            query = query.Where(p => EF.Functions.Like(p.Category, category));
+
+            var products = await query.Select(p => new ProductDto
             {
                 Id = p.Id,
                 Name = p.Name,
                 Price = p.Price,
-                Count = p.Count,
-                
+                Count = p.Count
             }).ToListAsync();
+
+            return Ok(products);
         }
 
         // GET: api/Products/5
@@ -50,27 +78,22 @@ namespace StorageApi.Controllers
                 Count = product.Count
             };
         }
-        // GET: api/Products/search
-        [HttpGet("search")]
-        public async Task<ActionResult<IEnumerable<ProductDto>>> SearchProducts(
-     [FromQuery] string? category,
-     [FromQuery] string? name)
+        // GET: api/Products/Stats
+        [HttpGet("stats")]
+        public async Task<ActionResult<object>> GetStats()
         {
-            var query = _context.Products.AsQueryable();
+            var products = await _context.Products.ToListAsync();
 
-            if (!string.IsNullOrWhiteSpace(category))
-                query = query.Where(p => EF.Functions.Like(p.Category, category));
+            var totalCount = products.Sum(p => p.Count);
+            var totalValue = products.Sum(p => p.Price * p.Count);
+            var averagePrice = products.Any() ? products.Average(p => p.Price) : 0;
 
-            if (!string.IsNullOrWhiteSpace(name))
-                query = query.Where(p => EF.Functions.Like(p.Name, $"%{name}%"));
-
-            return await query.Select(p => new ProductDto
+            return Ok(new
             {
-                Id = p.Id,
-                Name = p.Name,
-                Price = p.Price,
-                Count = p.Count
-            }).ToListAsync();
+                TotalProductCount = totalCount,
+                TotalInventoryValue = totalValue,
+                AveragePrice = averagePrice
+            });
         }
 
         // PUT: api/Products/5
@@ -112,15 +135,15 @@ namespace StorageApi.Controllers
         public async Task<ActionResult<ProductDto>> PostProduct(CreateProductDto dto)
         {
 
-        var product = new Product
-        {
-            Name = dto.Name,
-            Price = dto.Price,
-            Category = dto.Category,
-            Shelf = dto.Shelf,
-            Count = dto.Count,
-            Description = dto.Description
-        };
+            var product = new Product
+            {
+                Name = dto.Name,
+                Price = dto.Price,
+                Category = dto.Category,
+                Shelf = dto.Shelf,
+                Count = dto.Count,
+                Description = dto.Description
+            };
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
