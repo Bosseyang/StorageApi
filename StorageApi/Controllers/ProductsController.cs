@@ -30,10 +30,11 @@ namespace StorageApi.Controllers
 
                 if (!categoryExists) 
                     return NotFound($"Category: {category} not found.");
+                //Filters the product with category keyword
+                query = query.Where(p => EF.Functions.Like(p.Category, category));
             }
 
-            //Filters the product with category keyword
-            query = query.Where(p => EF.Functions.Like(p.Category, category));
+            
 
             //We remap the properties in product to a ProductDto and only return the following properties
             var products = await query.Select(p => new ProductDto
